@@ -32,11 +32,35 @@ app.route('/_api/package.json')
       res.type('txt').send(data.toString());
     });
   });
-  
+
 app.route('/')
     .get(function(req, res) {
 		  res.sendFile(process.cwd() + '/views/index.html');
-    })
+    });
+
+app.route('/:param')
+    .get(function(req, res) {
+      const param = req.params.param;
+      const date = isNaN(param) ? new Date(param) : new Date(param * 1000);
+      let result = {
+        unix: null,
+        natural: null,
+      };
+
+      // if date is valid
+      if (!isNaN(date.getTime())) {
+        const unixUTC = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 1000;
+        const dateUTC = new Date (unixUTC * 1000);
+        const month = dateUTC.toLocaleString("en-us", { month: "long" });
+
+        result = {
+          unix: unixUTC,
+          natural: month + " " + date.getUTCDate() + ", " + dateUTC.getUTCFullYear(),
+        };
+      }
+
+		  res.json(result);
+    });
 
 // Respond not found to all the wrong routes
 app.use(function(req, res, next){
@@ -50,10 +74,9 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500)
       .type('txt')
       .send(err.message || 'SERVER ERROR');
-  }  
+  }
 })
 
-app.listen(process.env.PORT, function () {
+app.listen(process.env.PORT || 3000, function () {
   console.log('Node.js listening ...');
 });
-
